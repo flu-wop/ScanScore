@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, Pressable, SafeAreaView, StatusBar as RNStatusBar, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Product } from './src/api';
 import {
@@ -52,29 +53,31 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.root}>
-      <StatusBar style="dark" />
-      <View style={styles.body}>
-        {current ? (
-          <Result product={current} avoid={avoid} onBack={() => setCurrent(null)} />
-        ) : tab === 'scan' ? (
-          <Scan onResult={onResult} />
-        ) : tab === 'history' ? (
-          <History entries={history} avoid={avoid} onOpen={setCurrent} onClear={onClear} />
-        ) : (
-          <Avoid terms={avoid} onChange={onAvoidChange} />
-        )}
-      </View>
-      {!current && (
-        <View style={styles.tabBar}>
-          {TABS.map((t) => (
-            <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
-              <Text style={[styles.tabText, tab === t.key && styles.tabActive]}>{t.label}</Text>
-            </Pressable>
-          ))}
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.root}>
+        <StatusBar style="dark" />
+        <View style={styles.body}>
+          {current ? (
+            <Result product={current} avoid={avoid} onBack={() => setCurrent(null)} />
+          ) : tab === 'scan' ? (
+            <Scan onResult={onResult} />
+          ) : tab === 'history' ? (
+            <History entries={history} avoid={avoid} onOpen={setCurrent} onClear={onClear} />
+          ) : (
+            <Avoid terms={avoid} onChange={onAvoidChange} />
+          )}
         </View>
-      )}
-    </SafeAreaView>
+        {!current && (
+          <View style={styles.tabBar}>
+            {TABS.map((t) => (
+              <Pressable key={t.key} style={styles.tab} onPress={() => setTab(t.key)}>
+                <Text style={[styles.tabText, tab === t.key && styles.tabActive]}>{t.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
@@ -82,7 +85,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.bg,
-    paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight ?? 0 : 0,
   },
   body: { flex: 1 },
   tabBar: {
