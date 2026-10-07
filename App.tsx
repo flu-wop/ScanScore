@@ -16,17 +16,19 @@ import Scan from './src/screens/Scan';
 import Result from './src/screens/Result';
 import History from './src/screens/History';
 import Avoid from './src/screens/Avoid';
+import Home from './src/screens/Home';
 
-type Tab = 'scan' | 'history' | 'avoid';
+type Tab = 'home' | 'scan' | 'history' | 'avoid';
 
 const TABS: { key: Tab; label: string }[] = [
+  { key: 'home', label: 'Home' },
   { key: 'scan', label: 'Scan' },
   { key: 'history', label: 'History' },
   { key: 'avoid', label: 'Avoid' },
 ];
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('scan');
+  const [tab, setTab] = useState<Tab>('home');
   const [current, setCurrent] = useState<Product | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [avoid, setAvoid] = useState<string[]>([]);
@@ -59,6 +61,8 @@ export default function App() {
         <View style={styles.body}>
           {current ? (
             <Result product={current} avoid={avoid} onBack={() => setCurrent(null)} />
+          ) : tab === 'home' ? (
+            <Home entries={history} avoid={avoid} onOpen={setCurrent} onScan={() => setTab('scan')} />
           ) : tab === 'scan' ? (
             <Scan onResult={onResult} />
           ) : tab === 'history' ? (

@@ -2,7 +2,12 @@ import React, { useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Product } from '../api';
 import { scoreProduct } from '../score';
-import { colors, scoreColor, space, type } from '../theme';
+import { card, colors, scoreColor, space, type } from '../theme';
+import ScoreRing from '../components/ScoreRing';
+import Breakdown from '../components/Breakdown';
+import NutritionBars from '../components/NutritionBars';
+import ConfidenceMeter from '../components/ConfidenceMeter';
+import IngredientChips from '../components/IngredientChips';
 
 export default function Result({
   product,
@@ -35,45 +40,47 @@ export default function Result({
         </View>
       </View>
 
-      <View style={styles.scoreCard}>
-        <View style={[styles.scoreCircle, { borderColor: tint }]}>
-          <Text style={[styles.scoreValue, { color: tint }]}>
-            {score.value === null ? '—' : score.value}
-          </Text>
-        </View>
+      <View style={[card, styles.scoreCard]}>
+        <ScoreRing value={score.value} size={104} stroke={10} caption="/ 100" />
         <View style={{ flex: 1 }}>
           <Text style={[styles.verdict, { color: tint }]}>{score.verdict}</Text>
           <Text style={styles.meta}>
             {score.value === null
               ? 'Not enough data in the open databases to score this product.'
-              : 'Out of 100. Based on ingredients and open data.'}
+              : `${score.confidence.level} confidence · ${score.reasons.length} factor${score.reasons.length === 1 ? '' : 's'}`}
           </Text>
         </View>
       </View>
 
-      {score.reasons.length > 0 && (
+      {score.value !== null && (
         <>
-          <Text style={styles.label}>WHY</Text>
-          {score.reasons.map((r, i) => (
-            <View key={i} style={styles.reason}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.reasonLabel}>{r.label}</Text>
-                {!!r.detail && <Text style={styles.meta}>{r.detail}</Text>}
-              </View>
-              <Text
-                style={[styles.impact, { color: r.impact >= 0 ? colors.good : colors.bad }]}
-              >
-                {r.impact > 0 ? `+${r.impact}` : r.impact}
-              </Text>
-            </View>
-          ))}
+          <Text style={styles.label}>HOW THE SCORE ADDS UP</Text>
+          <View style={card}>
+            <Breakdown score={score} />
+          </View>
         </>
       )}
+
+      {!!product.nutrition && (
+        <>
+          <Text style={styles.label}>NUTRITION</Text>
+          <View style={card}>
+            <NutritionBars product={product} />
+          </View>
+        </>
+      )}
+
+      <Text style={styles.label}>DATA CONFIDENCE</Text>
+      <View style={card}>
+        <ConfidenceMeter confidence={score.confidence} />
+      </View>
 
       {!!product.ingredients && (
         <>
           <Text style={styles.label}>INGREDIENTS</Text>
-          <Text style={styles.ingredients}>{product.ingredients}</Text>
+          <View style={card}>
+            <IngredientChips text={product.ingredients} avoid={avoid} />
+          </View>
         </>
       )}
 
@@ -96,38 +103,8 @@ const styles = StyleSheet.create({
   brand: { ...type.label, color: colors.muted, marginBottom: 2 },
   name: { ...type.title, color: colors.ink },
   meta: { fontSize: 14, color: colors.muted, marginTop: 2 },
-  scoreCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    backgroundColor: colors.card,
-    borderRadius: 24,
-    padding: space.lg,
-    marginBottom: space.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  scoreCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scoreValue: { fontSize: 32, fontWeight: '800' },
-  verdict: { fontSize: 26, fontWeight: '800' },
-  label: { ...type.label, color: colors.muted, marginTop: space.md, marginBottom: space.sm },
-  reason: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-    gap: space.md,
-  },
-  reasonLabel: { fontSize: 16, fontWeight: '600', color: colors.ink },
-  impact: { fontSize: 18, fontWeight: '800' },
-  ingredients: { ...type.body, color: colors.ink, lineHeight: 23 },
-  footnote: { fontSize: 12, color: colors.unknown, marginTop: space.xl, lineHeight: 17 },
+  scoreCard: { flexDirection: 'row', alignItems: 'center', gap: space.lg, padding: space.lg, borderRadius: 24 },
+  verdict: { fontSize: 28, fontWeight: '800' },
+  label: { ...type.label, color: colors.muted, marginTop: space.sm, marginBottom: space.sm },
+  footnote: { fontSize: 12, color: colors.unknown, marginTop: space.lg, lineHeight: 17 },
 });

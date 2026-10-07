@@ -1,5 +1,15 @@
 export type Category = 'food' | 'beauty' | 'other';
 
+export interface Nutrition {
+  energyKcal?: number;
+  fat?: number;
+  saturatedFat?: number;
+  sugars?: number;
+  salt?: number;
+  fiber?: number;
+  proteins?: number;
+}
+
 export interface Product {
   code: string;
   name: string;
@@ -13,6 +23,8 @@ export interface Product {
   ecoscore?: string;
   labels: string[];
   quantity?: string;
+  categories?: string[];
+  nutrition?: Nutrition;
 }
 
 const SOURCES: { host: string; category: Category }[] = [
@@ -33,7 +45,28 @@ const FIELDS = [
   'ecoscore_grade',
   'labels_tags',
   'quantity',
+  'categories_tags',
+  'nutriments',
 ].join(',');
+
+function num(v: unknown): number | undefined {
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  return typeof n === 'number' && Number.isFinite(n) ? n : undefined;
+}
+
+function parseNutrition(n: Record<string, unknown> | undefined): Nutrition | undefined {
+  if (!n) return undefined;
+  const out: Nutrition = {
+    energyKcal: num(n['energy-kcal_100g']),
+    fat: num(n['fat_100g']),
+    saturatedFat: num(n['saturated-fat_100g']),
+    sugars: num(n['sugars_100g']),
+    salt: num(n['salt_100g']),
+    fiber: num(n['fiber_100g']),
+    proteins: num(n['proteins_100g']),
+  };
+  return Object.values(out).some((v) => v !== undefined) ? out : undefined;
+}
 
 async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
   const controller = new AbortController();
@@ -76,6 +109,8 @@ async function lookupOne(
     ecoscore: p.ecoscore_grade ? String(p.ecoscore_grade).toLowerCase() : undefined,
     labels: Array.isArray(p.labels_tags) ? p.labels_tags : [],
     quantity: p.quantity || undefined,
+    categories: Array.isArray(p.categories_tags) ? p.categories_tags : [],
+    nutrition: category === 'food' ? parseNutrition(p.nutriments) : undefined,
   };
 }
 
