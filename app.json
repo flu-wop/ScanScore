@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "ScanScore",
+    "slug": "scanscore",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.influential.scanscore"
+    },
+    "android": {
+      "package": "com.influential.scanscore"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ScanScore uses the camera to read product barcodes."
+        }
+      ]
+    ]
+  }
+}
