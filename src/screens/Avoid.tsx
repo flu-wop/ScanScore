@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm, marginBottom: space.md },
   input: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.line,

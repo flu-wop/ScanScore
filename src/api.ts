@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export type Category = 'food' | 'beauty' | 'other';
 
 export interface Nutrition {
@@ -74,7 +76,8 @@ async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
   try {
     return await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'ScanScore/1.0 (personal use)' },
+      // Browsers forbid a custom User-Agent on cross-origin requests.
+      headers: Platform.OS === 'web' ? undefined : { 'User-Agent': 'ScanScore/1.0 (personal use)' },
     });
   } finally {
     clearTimeout(timer);

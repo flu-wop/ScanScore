@@ -19,6 +19,15 @@
           "cameraPermission": "ScanScore uses the camera to read product barcodes."
         }
       ]
-    ]
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "name": "ScanScore",
+      "shortName": "ScanScore",
+      "themeColor": "#FAFAF7",
+      "backgroundColor": "#FAFAF7",
+      "favicon": "./public/icon-192.png"
+    }
   }
 }

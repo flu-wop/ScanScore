@@ -30,10 +30,10 @@ export default function Scan({ onResult }: { onResult: (p: Product) => void }) {
       try {
         const product = await fetchProduct(code);
         if (product) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
           onResult(product);
         } else {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
           setMessage(`No data found for ${code}.`);
         }
       } catch {
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: space.sm },
   input: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.line,
