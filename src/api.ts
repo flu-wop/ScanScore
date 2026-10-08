@@ -38,9 +38,12 @@ const SOURCES: { host: string; category: Category }[] = [
 const FIELDS = [
   'code',
   'product_name',
+  'product_name_en',
+  'product_type',
   'brands',
   'image_front_url',
   'ingredients_text',
+  'ingredients_text_en',
   'additives_tags',
   'nutriscore_grade',
   'nova_group',
@@ -50,6 +53,15 @@ const FIELDS = [
   'categories_tags',
   'nutriments',
 ].join(',');
+
+// The databases share barcodes and forward a request to whichever one holds the
+// product, so the source we asked is not a reliable category. product_type is.
+const PRODUCT_TYPES: Record<string, Category> = {
+  food: 'food',
+  beauty: 'beauty',
+  petfood: 'other',
+  product: 'other',
+};
 
 function num(v: unknown): number | undefined {
   const n = typeof v === 'string' ? parseFloat(v) : v;
@@ -86,7 +98,7 @@ async function fetchWithTimeout(url: string, ms = 8000): Promise<Response> {
 
 async function lookupOne(
   host: string,
-  category: Category,
+  sourceCategory: Category,
   code: string
 ): Promise<Product | null> {
   const res = await fetchWithTimeout(
@@ -96,9 +108,10 @@ async function lookupOne(
   const json = await res.json();
   if (json.status !== 1 || !json.product) return null;
   const p = json.product;
-  const name: string = (p.product_name || '').trim();
-  const ingredients: string = (p.ingredients_text || '').trim();
+  const name: string = (p.product_name || p.product_name_en || '').trim();
+  const ingredients: string = (p.ingredients_text || p.ingredients_text_en || '').trim();
   if (!name && !ingredients) return null;
+  const category = PRODUCT_TYPES[p.product_type] ?? sourceCategory;
   return {
     code,
     name: name || 'Unnamed product',
@@ -117,18 +130,31 @@ async function lookupOne(
   };
 }
 
+// Scanners report US barcodes as 12-digit UPC-A or 13-digit EAN with a leading 0.
+function codeVariants(code: string): string[] {
+  if (code.length === 12) return [code, '0' + code];
+  if (code.length === 13 && code.startsWith('0')) return [code, code.slice(1)];
+  return [code];
+}
+
 export async function fetchProduct(code: string): Promise<Product | null> {
   const clean = code.replace(/\D/g, '');
   if (!clean) return null;
-  const results = await Promise.allSettled(
-    SOURCES.map((s) => lookupOne(s.host, s.category, clean))
-  );
   let anyOk = false;
-  for (const r of results) {
-    if (r.status === 'fulfilled') {
-      anyOk = true;
-      if (r.value) return r.value;
+  for (const variant of codeVariants(clean)) {
+    const results = await Promise.allSettled(
+      SOURCES.map((s) => lookupOne(s.host, s.category, variant))
+    );
+    const found: Product[] = [];
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        anyOk = true;
+        if (r.value) found.push(r.value);
+      }
     }
+    // Prefer the richest record: one with ingredients beats one without.
+    found.sort((a, b) => Number(!!b.ingredients) - Number(!!a.ingredients));
+    if (found.length) return { ...found[0], code: clean };
   }
   if (!anyOk) throw new Error('network');
   return null;

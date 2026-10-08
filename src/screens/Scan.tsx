@@ -34,7 +34,7 @@ export default function Scan({ onResult }: { onResult: (p: Product) => void }) {
           onResult(product);
         } else {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-          setMessage(`No data found for ${code}.`);
+          setMessage(`${code} isn't in the open databases yet. Beauty and household coverage is thinner than food, especially for US brands. Try another product or type the barcode to double-check.`);
         }
       } catch {
         setMessage('Lookup failed. Check your connection.');
@@ -79,7 +79,7 @@ export default function Scan({ onResult }: { onResult: (p: Product) => void }) {
             <ActivityIndicator color="#fff" />
           </View>
         )}
-        <View pointerEvents="none" style={styles.frame} />
+        {permission?.granted && <View pointerEvents="none" style={styles.frame} />}
       </View>
 
       {message && <Text style={styles.message}>{message}</Text>}
