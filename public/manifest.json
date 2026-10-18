@@ -2,7 +2,7 @@
   "name": "ScanScore",
   "short_name": "ScanScore",
   "description": "Scan a barcode and score food, beauty, and household products out of 100.",
-  "start_url": "/",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#FAFAF7",
   "theme_color": "#FAFAF7",
